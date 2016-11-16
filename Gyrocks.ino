@@ -1,5 +1,5 @@
 /*
-   Vector Game Dings GH1
+   Vector Game on Ossilloscopes
    Carsten Wartmann 2016 cw@blenderbuch.de
 
    Heavily hacked and based on Trammel Hudsons work:
