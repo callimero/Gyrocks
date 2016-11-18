@@ -163,6 +163,16 @@ typedef struct
   int16_t vp;
 } rock_t;
 
+// Enemy
+typedef struct
+{
+  int16_t t = -1;
+  int16_t r = 0;
+  int16_t p = 0;
+  int16_t vr;
+  int16_t vp;
+} enemy_t;
+
 // Ship
 typedef struct
 {
@@ -216,6 +226,10 @@ bullet_t b[MAX_BULLETS];
 // max. number of rocks
 #define MAX_ROCK 5
 rock_t r[MAX_ROCK];
+
+// max. number of enemies
+#define MAX_ENEMY 5
+enemy_t e[MAX_ENEMY];
 
 // ship global
 static ship_t ship;
@@ -860,6 +874,56 @@ static void  update_rocks(rock_t * const rr)
 }
 
 
+// Enemies
+static void  add_enemy(enemy_t * const enemy)
+{
+  for (uint8_t i = 0 ; i < MAX_ENEMY ; i++)
+  {
+    enemy_t * const rr = &enemy[i];
+    if (rr->t == -1)
+    {
+      rr->t = rand() % 4 + 18;
+      rr->r = rand() % 1000 + 1;
+      rr->p = rand() % 359 * 16;
+
+      rr->vr = rand() % 30 + 15;
+      rr->vp = rand() % 10 - 5  ;
+      break;
+    }
+  }
+}
+
+static void  update_enemies(enemy_t * const rr)
+{
+  int x, y;
+  for (uint8_t i = 0 ; i < MAX_ENEMY ; i++)
+  {
+    if (rr[i].t >= 0) // nur wenn live/type gesetzt
+    {
+      if (rr[i].r < 10000 )
+      {
+        rr[i].r += rr[i].vr;
+      }
+
+      rr[i].p = (rr[i].p + rr[i].vp) % (360 * 16) ;
+      x = 2048 + (rr[i].r / 16 * icos(rr[i].p / 16)) / 100;
+      y = 2048 + (rr[i].r / 16 * isin(rr[i].p / 16)) / 100;
+
+      if (collision_bullet(x, y, rr[i].r / 512))
+      {
+        rr[i].t = -1;
+        rr[i].r = 0;
+      }
+      else
+      {
+        draw_object(rr[i].t, x, y, rr[i].r / 512, -rr[i].p / 4);
+      }
+    }
+  }
+}
+
+
+
 int collision_bullet(int x, int y, int d)
 {
   int x0, y0, x1, y1;
@@ -928,6 +992,8 @@ void video()
   update_bullets(b);
   update_rocks(r);
   if (rand() % 500 == 1) add_rock(r);
+  update_enemies(e);
+  if (rand() % 500 == 1) add_enemy(e);
   update_ship(&ship);
   draw_field();
 }
