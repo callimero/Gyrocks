@@ -1,6 +1,7 @@
 /*
    Vector Game on Ossilloscopes
    Carsten Wartmann 2016 cw@blenderbuch.de
+   For Make-Magazin
 
    Heavily hacked and based on Trammel Hudsons work:
 
@@ -853,7 +854,6 @@ static void  update_rocks(rock_t * const rr)
       else
       {
         draw_object(rr[i].t, x, y, rr[i].r / 512, -rr[i].p / 4);
-        // draw_object(5, x, y, 10, 0); // Debug Kreuz
       }
     }
   }
@@ -927,7 +927,7 @@ void video()
   update_stars(s);
   update_bullets(b);
   update_rocks(r);
-  if (rand() % 100 == 1) add_rock(r);
+  if (rand() % 500 == 1) add_rock(r);
   update_ship(&ship);
   draw_field();
 }
