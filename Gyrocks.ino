@@ -17,12 +17,13 @@
 
 /*
  * Todo:
- * - Enemies und Rocks trennen
- * - weniger Schüsse gleichzeitig
+ * + Enemies und Rocks trennen
+ * + weniger Schüsse gleichzeitig
  * - Enemy und Rocks können Ship schaden
+ *  - Enemies schießen
  * - Lebenszähler für Ship
  * - einfache Punktezählung 
- * - 
+ * - Feinde Formationen fliegen lassen 
  * 
  */
 
@@ -233,6 +234,9 @@ enemy_t e[MAX_ENEMY];
 
 // ship global
 static ship_t ship;
+
+unsigned int score;
+
 
 // fast but coarse sin table
 const  uint8_t isinTable8[] = {
@@ -864,6 +868,7 @@ static void  update_rocks(rock_t * const rr)
       {
         rr[i].t = -1;
         rr[i].r = 0;
+        score+=10;
       }
       else
       {
@@ -913,6 +918,7 @@ static void  update_enemies(enemy_t * const rr)
       {
         rr[i].t = -1;
         rr[i].r = 0;
+        score+=100;
       }
       else
       {
@@ -1011,9 +1017,13 @@ void loop()
   // Serial.println(fpsi);
 
   video();
-  // FPS drawing
-  draw_string("FPS:", 100, 250, 6);
-  draw_string(itoa(fps, buf, 10), 400, 250, 6);
+  // Score drawing
+  draw_string("Points:", 100, 150, 6);
+  draw_string(itoa(score, buf, 10), 800, 150, 6);
+
+  // FPS drawing DEBUG!
+  draw_string("FPS:", 3000, 150, 6);
+  draw_string(itoa(fps, buf, 10), 3400, 150, 6);
 
   num_points = rx_points;
 
