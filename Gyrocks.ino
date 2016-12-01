@@ -22,8 +22,10 @@
  * - Enemy und Rocks können Ship schaden
  *  - Enemies schießen
  * - Lebenszähler für Ship
- * - einfache Punktezählung 
+ * + einfache Punktezählung 
  * - Feinde Formationen fliegen lassen 
+ * - Alles auf Polarkoord umstellen (Ship/Bullets) für Kollisionsabfrage
+ * - Explosionen
  * 
  */
 
@@ -160,6 +162,8 @@ typedef struct
   int16_t t = -1;
   int16_t r = 0;
   int16_t p = 0;
+  int16_t x = 0;    //Keep track for collision
+  int16_t y = 0;
   int16_t vr;
   int16_t vp;
 } rock_t;
@@ -769,8 +773,14 @@ static void update_ship(ship_t * const ship)
   int rot;
 
   d = ((2048 - ship->x) * (2048 - ship->x) + (2048 - ship->y) * (2048 - ship->y)) / 75000;
-  if (d > 20) d = 20;
+  if (d > 15) d = 15;
   if (d < 1) d = 1;
+
+  if(collision(ship->x,ship->y,d))
+  {
+    score=0;
+  }
+
   rot = atan2(2048 - ship->y, 2048 - ship->x) * 180.0 / PI - 90;  // different coord sys...?! Float... hmm
 
   // Fire
@@ -863,6 +873,8 @@ static void  update_rocks(rock_t * const rr)
       rr[i].p = (rr[i].p + rr[i].vp) % (360 * 16) ;
       x = 2048 + (rr[i].r / 16 * icos(rr[i].p / 16)) / 100;
       y = 2048 + (rr[i].r / 16 * isin(rr[i].p / 16)) / 100;
+      rr[i].x = x;
+      rr[i].y = y;  // Keep track, x,y raus oder auf Polarkoords
 
       if (collision_bullet(x, y, rr[i].r / 512))
       {
@@ -926,6 +938,32 @@ static void  update_enemies(enemy_t * const rr)
       }
     }
   }
+}
+
+
+
+int collision(int x, int y, int d)
+{
+  int x0, y0, x1, y1;
+
+  d = d * 10;
+  x0 = x - d / 2;
+  y0 = y - d / 2;
+  x1 = x + d / 2;
+  y1 = y + d / 2;
+
+  for (uint8_t i = 0 ; i < MAX_ROCK ; i++)
+  {
+    if (r[i].t >= 0)
+    {
+      if (r[i].x > x0 && r[i].x < x1 && r[i].y > y0 && r[i].y < y1)
+      {
+//        r[i].t = -1;    //Kill rock also?
+        return 1; //Collision with Bullet
+      }
+    }
+  }
+  return 0; // No Collision
 }
 
 
