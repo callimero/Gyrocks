@@ -18,6 +18,7 @@
 /*
  * Todo:
  * - Alles auf ein System/Skalierung umstellen, fixe integer Mathe
+ * - implement Bounding Box Collision
  * + Enemies und Rocks trennen
  * + weniger Schüsse gleichzeitig
  * - Enemy und Rocks können Ship schaden
