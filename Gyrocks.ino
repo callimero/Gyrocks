@@ -17,9 +17,11 @@
 
 /*
  * Todo:
+ * - Alles auf ein System/Skalierung umstellen, fixe integer Mathe
  * + Enemies und Rocks trennen
  * + weniger Schüsse gleichzeitig
  * - Enemy und Rocks können Ship schaden
+ * - Bug in Collisions Erkennung? 
  *  - Enemies schießen
  * - Lebenszähler für Ship
  * + einfache Punktezählung 
@@ -164,6 +166,7 @@ typedef struct
   int16_t p = 0;
   int16_t x = 0;    //Keep track for collision
   int16_t y = 0;
+  int16_t d = 0;
   int16_t vr;
   int16_t vp;
 } rock_t;
@@ -776,7 +779,7 @@ static void update_ship(ship_t * const ship)
   if (d > 15) d = 15;
   if (d < 1) d = 1;
 
-  if(collision(ship->x,ship->y,d))
+  if(collision_rock(ship->x,ship->y,d))
   {
     score=0;
   }
@@ -875,6 +878,7 @@ static void  update_rocks(rock_t * const rr)
       y = 2048 + (rr[i].r / 16 * isin(rr[i].p / 16)) / 100;
       rr[i].x = x;
       rr[i].y = y;  // Keep track, x,y raus oder auf Polarkoords
+      rr[i].d= rr[i].r / 512;
 
       if (collision_bullet(x, y, rr[i].r / 512))
       {
@@ -884,7 +888,8 @@ static void  update_rocks(rock_t * const rr)
       }
       else
       {
-        draw_object(rr[i].t, x, y, rr[i].r / 512, -rr[i].p / 4);
+        draw_object(rr[i].t, x, y, rr[i].d, -rr[i].p / 4);
+        draw_rect(r[i].x-r[i].d*6,r[i].y-r[i].d*6,r[i].x+r[i].d*6,r[i].y+r[i].d*6); // debug
       }
     }
   }
@@ -941,17 +946,18 @@ static void  update_enemies(enemy_t * const rr)
 }
 
 
-
-int collision(int x, int y, int d)
+// Irgndwie verallgemeinern?
+int collision_rock(int x, int y, int d)
 {
   int x0, y0, x1, y1;
 
   d = d * 10;
-  x0 = x - d / 2;
-  y0 = y - d / 2;
-  x1 = x + d / 2;
-  y1 = y + d / 2;
+  x0 = x - d;
+  y0 = y - d ;
+  x1 = x + d;
+  y1 = y + d ;
 
+draw_rect(x0,y0,x1,y1);
   for (uint8_t i = 0 ; i < MAX_ROCK ; i++)
   {
     if (r[i].t >= 0)
@@ -1014,6 +1020,16 @@ void draw_field()
   lineto(0, 4095 - CORNER);
 }
 
+
+// Debug draw
+void draw_rect(int x0,int y0,int x1,int y1)
+{
+  moveto(x0, y0);
+  lineto(x1, y0);
+  lineto(x1, y1);
+  lineto(x0, y1);
+  lineto(x0, y0);
+}
 
 
 
