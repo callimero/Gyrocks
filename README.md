@@ -1,5 +1,5 @@
 # Gyrocks
-A Vekor Game For Oscilloscopes
+A Vector Game For Oscilloscopes
 
 Largely build onto Hudson Trammells teensyv/v.st project. v.st is a work from Trammell Hudson, License GPL
 
