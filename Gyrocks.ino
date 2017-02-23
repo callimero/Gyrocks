@@ -14,7 +14,6 @@
    a 2.5V reference signal for the mid-point.
 
 */
-
 /*
  * Todo:
  * - Alles auf ein System/Skalierung umstellen, fixe integer Mathe
@@ -1025,6 +1024,7 @@ void draw_field()
 // Debug draw
 void draw_rect(int x0,int y0,int x1,int y1)
 {
+  return;    //Debug!
   moveto(x0, y0);
   lineto(x1, y0);
   lineto(x1, y1);
