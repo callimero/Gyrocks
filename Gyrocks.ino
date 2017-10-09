@@ -1,19 +1,14 @@
 /*
-   Vector Game on Ossilloscopes
-   Carsten Wartmann 2016 cw@blenderbuch.de
-   For Make-Magazin
+   Vector Game "Gyrocks" auf dem Oszilloskop
+   Carsten Wartmann 2016/2017 cw@blenderbuch.de
+   Fürs Make-Magazin
 
-   Heavily hacked and based on Trammel Hudsons work:
+   Gehackt und basierend auf Trammel Hudsons Arbeit:
 
    Vector display using the MCP4921 DAC on the teensy3.1.
    More info: https://trmm.net/V.st
-
-   This uses the DMA hardware to drive the SPI output to two DACs,
-   one on SS0 and one on SS1.  The first two DACs are used for the
-   XY position, the third DAC for brightness and the fourth to generate
-   a 2.5V reference signal for the mid-point.
-
 */
+
 /*
    Todo:
    - Alles auf ein System/Skalierung umstellen, fixe integer Mathe
@@ -69,7 +64,6 @@
 
 // most vector scopes don't have brightness control, but set it anyway
 #define CONFIG_BRIGHTNESS
-//#undef CONFIG_BRIGHTNESS
 #define BRIGHT_OFF	2048	// "0 volts", relative to reference
 #define BRIGHT_NORMAL	3800	// lowest visible
 #define BRIGHT_BRIGHT	4095	// super bright
@@ -112,7 +106,7 @@
 #endif
 
 
-
+// Wichtige Pins wie am Teensy->DAC angeschlossen
 #define SS_PIN	10  // Chip Select 2
 #define SS2_PIN	6   // Chip Select 1
 #define SDI	11      // 
@@ -164,7 +158,7 @@ typedef struct
   int16_t t = -1;
   int16_t r = 0;
   int16_t p = 0;
-  int16_t x = 0;    //Keep track for collision
+  int16_t x = 0;    // x/y Merker für Kollisionsabfrage
   int16_t y = 0;
   int16_t d = 0;
   int16_t vr;
@@ -213,7 +207,7 @@ typedef struct
 } bullet_t;
 
 
-#define HALT  // Uncomment and second Button will act as "Handbrake" halting the Game if released (Debug&Screenshot)
+#define HALT  // Auskommentieren um "Handbremse" für zweiten Knopf/Schalter zu lösen (Debug&Screenshot)
 
 // Joystick
 #define BUTT 14   // Digital
@@ -224,31 +218,34 @@ typedef struct
 #define DEADX 30  // Deadband X
 #define DEADY 30  // Deadband Y
 
-#define FIREDELAY 100   // Time between two shots
+#define FIREDELAY 100   // Zweitverzögerung zwischen zwei Schüssen
 
-// background stars
+// Hintergrundsterne
 #define MAX_STARS 30
 star_t s[MAX_STARS];
 
-// max. number of bullets
+// max. Anzahl der Schüsse
 #define MAX_BULLETS 5
 bullet_t b[MAX_BULLETS];
 
-// max. number of rocks
+// max. Zahl der Asteroiden/Rocks
 #define MAX_ROCK 5
 rock_t r[MAX_ROCK];
 
-// max. number of enemies
+// max. Zahl der Feinde
 #define MAX_ENEMY 5
 enemy_t e[MAX_ENEMY];
 
-// ship global
+// Infos zum Schiff/Ship speichern
 static ship_t ship;
 
+// Punktezähler
 unsigned int score;
 
+// Frames per Second/Framerate Merker
+long fps;
 
-// fast but coarse sin table
+// Schnelle aber ungenaue Sinus Tabelle
 const  uint8_t isinTable8[] = {
   0, 4, 9, 13, 18, 22, 27, 31, 35, 40, 44,
   49, 53, 57, 62, 66, 70, 75, 79, 83, 87,
@@ -263,7 +260,7 @@ const  uint8_t isinTable8[] = {
   252, 253, 253, 254, 254, 254, 255, 255, 255, 255,
 };
 
-// fast but coarse sin
+// Schnelle aber ungenaue Sinus Funktion 
 int isin(int x)
 {
   boolean pos = true;  // positive - keeps an eye on the sign.
@@ -286,7 +283,7 @@ int isin(int x)
   return -(isinTable8[idx] / 2);
 }
 
-// fast cos
+// Cosinus
 int icos(int x)
 {
   return (isin(x + 90));
@@ -430,7 +427,6 @@ void moveto(int x, int y)
 
 void lineto(int x, int y)
 {
-
   //Test!  Very stupid "Clipping"
   //if (x>=4096 ||x<0 ||y>4096 || y<0) return; //don't draw at all
   if (x >= 4096) x = 4095;
@@ -687,7 +683,7 @@ void setup()
   SPI.setClockDivider(SPI_CLOCK_DIV2);
   spi_dma_setup();
 
-  Serial.begin(9600);
+  //Serial.begin(9600); // For Debugging
   init_stars(s);
 }
 
@@ -695,7 +691,7 @@ void setup()
 
 /* ***************************** Game Stuff **************************************************/
 
-// Objekt uses a slightly different format than the font renderer and allows to rotate
+// Ähnlich draw_string aber mit definierter Rotation
 void draw_object(byte c, int x, int y, int size, int rot)
 {
   const objects_char_t * const f = &gobjects[c];
@@ -727,7 +723,7 @@ void draw_object(byte c, int x, int y, int size, int rot)
 }
 
 
-// Adds a bullet if a slot is free (age==-1)
+// Neuer Schuß wenn eine Slot frei (age==-1)
 static void add_bullet(bullet_t * const bullets, ship_t * const ship, int rot)
 {
   for (uint8_t i = 0 ; i < MAX_BULLETS ; i++)
@@ -748,7 +744,7 @@ static void add_bullet(bullet_t * const bullets, ship_t * const ship, int rot)
 }
 
 
-// Updating bullets
+// Updating bullets/Schüsse
 static void update_bullets(bullet_t * const bullets)
 {
   for (uint8_t i = 0 ; i < MAX_BULLETS ; i++)
@@ -772,7 +768,7 @@ static void update_bullets(bullet_t * const bullets)
 }
 
 
-// ship housekeeping
+// Shiff Verwaltung
 static void update_ship(ship_t * const ship)
 {
   long d;
@@ -840,7 +836,7 @@ static void  init_stars(star_t * const stars)
 }
 
 
-// Felsen
+// Felsen/Rock/Asteroid
 static void  add_rock(rock_t * const rock)
 {
   for (uint8_t i = 0 ; i < MAX_ROCK ; i++)
@@ -880,7 +876,7 @@ static void  update_rocks(rock_t * const rr)
       x = 2048 + (rr[i].r / 16 * icos(rr[i].p / 16)) / 100;
       y = 2048 + (rr[i].r / 16 * isin(rr[i].p / 16)) / 100;
       rr[i].x = x;
-      rr[i].y = y;  // Keep track, x,y raus oder auf Polarkoords
+      rr[i].y = y;  // Keep track, x,y ToDo: raus oder auf Polarkoords
       rr[i].d = rr[i].r / 512;
 
       if (collision_bullet(x, y, rr[i].r / 512))
@@ -995,11 +991,11 @@ int collision_bullet(int x, int y, int d)
       if (b[i].x > x0 && b[i].x < x1 && b[i].y > y0 && b[i].y < y1)
       {
         b[i].age = -1;
-        return 1; //Collision with Bullet
+        return 1; //Kollision mit Schuss/Bullet
       }
     }
   }
-  return 0; // No Collision
+  return 0; // Keine Kollision
 }
 
 
@@ -1037,9 +1033,10 @@ void draw_rect(int x0, int y0, int x1, int y1)
 
 
 
-// Main display function in game
+// Anzeige Funktion
 void video()
 {
+  // Joystick auslesen
   if (analogRead(POTX) > 512 + DEADX || analogRead(POTX) < 512 - DEADX)
   {
     ship.x = ship.x - (analogRead(POTX) - 512) / 4;
@@ -1064,7 +1061,8 @@ void video()
 
 
 
-long fps;
+
+// Hauptfunktion
 void loop()
 {
 
@@ -1075,17 +1073,16 @@ void loop()
   if (!digitalRead(BUTT) == HIGH)
   {
 #endif
+
     rx_points = 0;
     char buf[12];
 
-    // Serial.println(fpsi);
-
     video();
-    // Score drawing
+    // Punktezähler ausgeben
     draw_string("Points:", 100, 150, 6);
     draw_string(itoa(score, buf, 10), 800, 150, 6);
 
-    // FPS drawing DEBUG!
+    // FPS Todo: Debug Switch?!
     draw_string("FPS:", 3000, 150, 6);
     draw_string(itoa(fps, buf, 10), 3400, 150, 6);
 
