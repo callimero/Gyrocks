@@ -15,21 +15,21 @@
 
 */
 /*
- * Todo:
- * - Alles auf ein System/Skalierung umstellen, fixe integer Mathe
- * - implement Bounding Box Collision
- * + Enemies und Rocks trennen
- * + weniger Schüsse gleichzeitig
- * - Enemy und Rocks können Ship schaden
- * - Bug in Collisions Erkennung? 
- *  - Enemies schießen
- * - Lebenszähler für Ship
- * + einfache Punktezählung 
- * - Feinde Formationen fliegen lassen 
- * - Alles auf Polarkoord umstellen (Ship/Bullets) für Kollisionsabfrage
- * - Explosionen
- * 
- */
+   Todo:
+   - Alles auf ein System/Skalierung umstellen, fixe integer Mathe
+   - implement Bounding Box Collision
+   + Enemies und Rocks trennen
+   + weniger Schüsse gleichzeitig
+   - Enemy und Rocks können Ship schaden
+   - Bug in Collisions Erkennung?
+    - Enemies schießen
+   - Lebenszähler für Ship
+   + einfache Punktezählung
+   - Feinde Formationen fliegen lassen
+   - Alles auf Polarkoord umstellen (Ship/Bullets) für Kollisionsabfrage
+   - Explosionen
+
+*/
 
 #include <SPI.h>
 #include "DMAChannel.h"
@@ -212,6 +212,9 @@ typedef struct
   int16_t age = -1;
 } bullet_t;
 
+
+#define HALT  // Uncomment and second Button will act as "Handbrake" halting the Game if released (Debug&Screenshot)
+
 // Joystick
 #define BUTT 14   // Digital
 #define TRIG 15   // Digital
@@ -315,7 +318,7 @@ spi_dma_tx()
   if (spi_dma_count == 0)
     return;
 
-//  digitalWriteFast(DELAY_PIN, 1);
+  //  digitalWriteFast(DELAY_PIN, 1);
 
   // add a EOQ to the last entry
   spi_dma_q[spi_dma_which][spi_dma_count - 1] |= (1 << 27);
@@ -359,7 +362,7 @@ static int spi_dma_tx_complete()
     return 0;
   }
 
-//  digitalWriteFast(DELAY_PIN, 0);
+  //  digitalWriteFast(DELAY_PIN, 0);
 
   spi_dma.clearComplete();
   spi_dma.clearError();
@@ -416,24 +419,24 @@ void rx_append(int x, int y, unsigned bright)
 
 void moveto(int x, int y)
 {
-//Test!  Very stupid "Clipping"
-  if (x>=4096) x=4095;
-  if (y>=4096) y=4095;
-  if (x<0) x=0;
-  if (y<0) y=0;
+  //Test!  Very stupid "Clipping"
+  if (x >= 4096) x = 4095;
+  if (y >= 4096) y = 4095;
+  if (x < 0) x = 0;
+  if (y < 0) y = 0;
   rx_append(x, y, 0);
 }
 
 
 void lineto(int x, int y)
 {
-  
-//Test!  Very stupid "Clipping"
-//if (x>=4096 ||x<0 ||y>4096 || y<0) return; //don't draw at all
-  if (x>=4096) x=4095;
-  if (y>=4096) y=4095;
-  if (x<0) x=0;
-  if (y<0) y=0;
+
+  //Test!  Very stupid "Clipping"
+  //if (x>=4096 ||x<0 ||y>4096 || y<0) return; //don't draw at all
+  if (x >= 4096) x = 4095;
+  if (y >= 4096) y = 4095;
+  if (x < 0) x = 0;
+  if (y < 0) y = 0;
 
   rx_append(x, y, 24); // normal brightness
 }
@@ -636,8 +639,8 @@ static inline void _draw_lineto(int x1, int y1, const int bright_shift)
   }
 
   // ensure that we end up exactly where we want or don't care
-//  goto_x(x1_orig);
-//  goto_y(y1_orig);
+  //  goto_x(x1_orig);
+  //  goto_y(y1_orig);
 }
 
 
@@ -760,9 +763,9 @@ static void update_bullets(bullet_t * const bullets)
       else
       {
         b->age++;
-        b->x = b->x + (b->vx>>1);
-        b->y = b->y + (b->vy>>1);
-        draw_object(6, b->x, b->y, 10, b->rot); 
+        b->x = b->x + (b->vx >> 1);
+        b->y = b->y + (b->vy >> 1);
+        draw_object(6, b->x, b->y, 10, b->rot);
       }
     }
   }
@@ -779,9 +782,9 @@ static void update_ship(ship_t * const ship)
   if (d > 15) d = 15;
   if (d < 1) d = 1;
 
-  if(collision_rock(ship->x,ship->y,d))
+  if (collision_rock(ship->x, ship->y, d))
   {
-    score=0;
+    score = 0;
   }
 
   rot = atan2(2048 - ship->y, 2048 - ship->x) * 180.0 / PI - 90;  // different coord sys...?! Float... hmm
@@ -872,24 +875,24 @@ static void  update_rocks(rock_t * const rr)
       {
         rr[i].t = -1;
         continue;
-        }
+      }
       rr[i].p = (rr[i].p + rr[i].vp) % (360 * 16) ;
       x = 2048 + (rr[i].r / 16 * icos(rr[i].p / 16)) / 100;
       y = 2048 + (rr[i].r / 16 * isin(rr[i].p / 16)) / 100;
       rr[i].x = x;
       rr[i].y = y;  // Keep track, x,y raus oder auf Polarkoords
-      rr[i].d= rr[i].r / 512;
+      rr[i].d = rr[i].r / 512;
 
       if (collision_bullet(x, y, rr[i].r / 512))
       {
         rr[i].t = -1;
         rr[i].r = 0;
-        score+=10;
+        score += 10;
       }
       else
       {
         draw_object(rr[i].t, x, y, rr[i].d, -rr[i].p / 4);
-        draw_rect(r[i].x-r[i].d*6,r[i].y-r[i].d*6,r[i].x+r[i].d*6,r[i].y+r[i].d*6); // debug
+        draw_rect(r[i].x - r[i].d * 6, r[i].y - r[i].d * 6, r[i].x + r[i].d * 6, r[i].y + r[i].d * 6); // debug
       }
     }
   }
@@ -935,7 +938,7 @@ static void  update_enemies(enemy_t * const rr)
       {
         rr[i].t = -1;
         rr[i].r = 0;
-        score+=100;
+        score += 100;
       }
       else
       {
@@ -957,14 +960,14 @@ int collision_rock(int x, int y, int d)
   x1 = x + d;
   y1 = y + d ;
 
-draw_rect(x0,y0,x1,y1);
+  draw_rect(x0, y0, x1, y1);
   for (uint8_t i = 0 ; i < MAX_ROCK ; i++)
   {
     if (r[i].t >= 0)
     {
       if (r[i].x > x0 && r[i].x < x1 && r[i].y > y0 && r[i].y < y1)
       {
-//        r[i].t = -1;    //Kill rock also?
+        //        r[i].t = -1;    //Kill rock also?
         return 1; //Collision with Bullet
       }
     }
@@ -1022,7 +1025,7 @@ void draw_field()
 
 
 // Debug draw
-void draw_rect(int x0,int y0,int x1,int y1)
+void draw_rect(int x0, int y0, int x1, int y1)
 {
   return;    //Debug!
   moveto(x0, y0);
@@ -1066,21 +1069,30 @@ void loop()
 {
 
   elapsedMicros waiting;    // Auto updating
-  rx_points = 0;
-  char buf[12];
 
-  // Serial.println(fpsi);
+#ifdef HALT
+  // HALTing Game (Debug&Screenshot)
+  if (!digitalRead(BUTT) == HIGH)
+  {
+#endif
+    rx_points = 0;
+    char buf[12];
 
-  video();
-  // Score drawing
-  draw_string("Points:", 100, 150, 6);
-  draw_string(itoa(score, buf, 10), 800, 150, 6);
+    // Serial.println(fpsi);
 
-  // FPS drawing DEBUG!
-  draw_string("FPS:", 3000, 150, 6);
-  draw_string(itoa(fps, buf, 10), 3400, 150, 6);
+    video();
+    // Score drawing
+    draw_string("Points:", 100, 150, 6);
+    draw_string(itoa(score, buf, 10), 800, 150, 6);
 
-  num_points = rx_points;
+    // FPS drawing DEBUG!
+    draw_string("FPS:", 3000, 150, 6);
+    draw_string(itoa(fps, buf, 10), 3400, 150, 6);
+
+    num_points = rx_points;
+#ifdef HALT
+  }
+#endif
 
   /*
     // if there are any DMAs currently in transit, wait for them
@@ -1128,7 +1140,6 @@ void loop()
 
   // the USB loop above will flush eventually
   // digitalWriteFast(DEBUG_PIN, 0);
-
 
   //while (waiting < 10000)   //limit frame rate 100fps max
   // ;
