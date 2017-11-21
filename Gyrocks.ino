@@ -237,7 +237,7 @@ rock_t r[MAX_ROCK];
 enemy_t e[MAX_ENEMY];
 
 // Infos zum Schiff/Ship speichern
-static ship_t ship;
+ship_t ship;
 
 // Punktezähler
 unsigned int score;
@@ -768,7 +768,7 @@ static void update_bullets(bullet_t * const bullets)
 }
 
 
-// Shiff Verwaltung
+// Schiff Verwaltung
 static void update_ship(ship_t * const ship)
 {
   long d;
@@ -1068,6 +1068,7 @@ void loop()
 
   elapsedMicros waiting;    // Auto updating
 
+#undef HALT
 #ifdef HALT
   // HALTing Game (Debug&Screenshot)
   if (!digitalRead(BUTT) == HIGH)
@@ -1087,6 +1088,7 @@ void loop()
     draw_string(itoa(fps, buf, 10), 3400, 150, 6);
 
     num_points = rx_points;
+
 #ifdef HALT
   }
 #endif
