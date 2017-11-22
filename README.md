@@ -1,6 +1,11 @@
 # Gyrocks
 A Vector Game For Oscilloscopes
 
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/callimero/Gyrocks/master/Bilder/GyrocksTest.jpg?raw=true" width="250"/>
+</p>
+
 Largely build onto Hudson Trammells teensyv/v.st project. v.st is a work from Trammell Hudson, License GPL
 
 
