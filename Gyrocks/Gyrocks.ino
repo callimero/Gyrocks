@@ -212,9 +212,9 @@ typedef struct
 // Joystick
 #define BUTT 14   // Digital
 #define TRIG 15   // Digital
-#define THRU 2    // Analog
-#define POTX 3    // Analog
-#define POTY 4    // Analog
+#define THRU 16    // Analog
+#define POTX 17   // Analog
+#define POTY 18    // Analog
 #define DEADX 30  // Deadband X
 #define DEADY 30  // Deadband Y
 
